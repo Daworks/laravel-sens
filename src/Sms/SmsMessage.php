@@ -1,8 +1,8 @@
 <?php
 
-namespace Seungmun\Sens\Sms;
+namespace Daworks\Sens\Sms;
 
-use Seungmun\Sens\Contracts\SensMessage;
+use Daworks\Sens\Contracts\SensMessage;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 
 class SmsMessage implements SensMessage

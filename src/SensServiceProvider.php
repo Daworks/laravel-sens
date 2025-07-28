@@ -1,21 +1,19 @@
 <?php
 
-namespace Seungmun\Sens;
+namespace Daworks\Sens;
 
-use Seungmun\Sens\AlimTalk\AlimTalk;
-use Seungmun\Sens\AlimTalk\AlimTalkChannel;
-use Seungmun\Sens\Sms\Sms;
-use Seungmun\Sens\Sms\SmsChannel;
+use Daworks\Sens\AlimTalk\AlimTalk;
+use Daworks\Sens\AlimTalk\AlimTalkChannel;
+use Daworks\Sens\Sms\Sms;
+use Daworks\Sens\Sms\SmsChannel;
 use Illuminate\Support\ServiceProvider;
 
 class SensServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
-     *
-     * @return void
      */
-    public function register()
+    public function register(): void
     {
         $this->mergeConfigFrom(
             __DIR__ . '/../config/laravel-sens.php',
@@ -39,10 +37,8 @@ class SensServiceProvider extends ServiceProvider
 
     /**
      * Bootstrap any application services.
-     *
-     * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         $this->publishes([
             __DIR__ . '/../config/laravel-sens.php' => config_path('laravel-sens.php')
@@ -51,10 +47,8 @@ class SensServiceProvider extends ServiceProvider
 
     /**
      * Get the services provided by the provider.
-     *
-     * @return array
      */
-    public function provides()
+    public function provides(): array
     {
         return [];
     }

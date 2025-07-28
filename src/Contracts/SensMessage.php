@@ -1,6 +1,6 @@
 <?php
 
-namespace Seungmun\Sens\Contracts;
+namespace Daworks\Sens\Contracts;
 
 interface SensMessage
 {

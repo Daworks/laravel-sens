@@ -1,6 +1,7 @@
 # The MIT License (MIT)
 
-Copyright (c) 2022 **Seungmun Jeong** <seungmunj@gmail.com>
+Copyright (c) 2022 **Seungmun Jeong** <seungmunj@gmail.com>  
+Copyright (c) 2025 **Deokhyoung Lee** <dhlee@daworks.io> (Laravel 9.x+ compatibility fork)
 
 > Permission is hereby granted, free of charge, to any person obtaining a copy
 > of this software and associated documentation files (the "Software"), to deal

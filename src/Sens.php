@@ -1,9 +1,9 @@
 <?php
 
-namespace Seungmun\Sens;
+namespace Daworks\Sens;
 
 use GuzzleHttp\Client;
-use Seungmun\Sens\Contracts\Sens as SensContract;
+use Daworks\Sens\Contracts\Sens as SensContract;
 
 abstract class Sens implements SensContract
 {
@@ -77,7 +77,7 @@ abstract class Sens implements SensContract
      * Set SENS service identifier.
      *
      * @param  string  $serviceId
-     * @return \Seungmun\Sens\Sens
+     * @return \Daworks\Sens\Sens
      */
     public function setServiceId(string $serviceId)
     {
@@ -100,7 +100,7 @@ abstract class Sens implements SensContract
      * Set SENS access key.
      *
      * @param  string  $accessKey
-     * @return \Seungmun\Sens\Sens
+     * @return \Daworks\Sens\Sens
      */
     public function setAccessKey(string $accessKey)
     {
@@ -123,7 +123,7 @@ abstract class Sens implements SensContract
      * Set SENS secret key.
      *
      * @param  string  $secretKey
-     * @return \Seungmun\Sens\Sens
+     * @return \Daworks\Sens\Sens
      */
     public function setSecretKey(string $secretKey)
     {
@@ -236,7 +236,7 @@ abstract class Sens implements SensContract
      * Remove the given HTTP header.
      *
      * @param  string  $key
-     * @return \Seungmun\Sens\Sens
+     * @return \Daworks\Sens\Sens
      */
     public function removeHeader(string $key)
     {

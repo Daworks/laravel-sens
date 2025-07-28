@@ -1,6 +1,6 @@
 <?php
 
-namespace Seungmun\Sens\Tests;
+namespace Daworks\Sens\Tests;
 
 use Mockery as m;
 use GuzzleHttp\Client;
@@ -13,9 +13,6 @@ class SensSmsChannelTest extends TestCase
      */
     private $guzzleHttp;
 
-    /**
-     * @return void
-     */
     protected function setUp(): void
     {
         parent::setUp();
@@ -23,17 +20,11 @@ class SensSmsChannelTest extends TestCase
         $this->guzzleHttp = m::mock(Client::class);
     }
 
-    /**
-     * @return void
-     */
-    public function testIamSorryBecauseTestsAreSoNuisance()
+    public function testIamSorryBecauseTestsAreSoNuisance(): void
     {
         $this->assertTrue(true);
     }
 
-    /**
-     * @return void
-     */
     protected function tearDown(): void
     {
         m::close();

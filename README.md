@@ -1,17 +1,10 @@
 # NCLOUD SENS notifications channel for Laravel
 
-[![Latest Stable Version](https://poser.pugx.org/seungmun/laravel-sens/v)](//packagist.org/packages/seungmun/laravel-sens)
-[![Total Downloads](https://poser.pugx.org/seungmun/laravel-sens/downloads)](//packagist.org/packages/seungmun/laravel-sens)
-[![License](https://poser.pugx.org/seungmun/laravel-sens/license)](//packagist.org/packages/seungmun/laravel-sens)
-<a href="https://github.com/seungmun/sens-php/actions">
-    <img src="https://github.com/seungmun/laravel-sens/workflows/tests/badge.svg" alt="Build Status">
-</a>
+이 패키지는 https://github.com/seungmun/laravel-sens에서 fork하여 라라벨 9.x이상 버전에서 동작하도록 컨버전되었습니다.
 
 This package makes it easy to send notification using [ncloud sens](//ncloud.com/product/applicationService/sens) with Laravel.
 
 And We are working on an unofficial sdk development public project so that ncloud sens can be used in php more flexibly.
-
-You can check the project here. (https://github.com/seungmun/sens-php)
 
 ## Official Community
 
@@ -22,22 +15,22 @@ You can check the project here. (https://github.com/seungmun/sens-php)
 
 Before you get started, you need the following:
 
-- PHP >= 7.2 (9.x also compatible)
-- Laravel (9.x / 8.x / 7.x / 6.x)
+- PHP >= 8.2
+- Laravel (9.x / 10.x / 11.x / 12.x)
 
 ## Installation
 
 You can install the package via composer:
 
 ``` bash
-composer require seungmun/laravel-sens
+composer require daworks/laravel-sens
 ```
 
 The package will automatically register itself.
 
 You can publish the config with:
 ```bash
-php artisan vendor:publish --provider="Seungmun\Sens\SensServiceProvider" --tag="config"
+php artisan vendor:publish --provider="Daworks\Sens\SensServiceProvider" --tag="config"
 ```
 
 Also, you can use it without publish the config file can be used simply by adding environment variables with:
@@ -97,8 +90,8 @@ php artisan make:notification SendPurchaseReceipt
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Seungmun\Sens\Sms\SmsChannel;
-use Seungmun\Sens\Sms\SmsMessage;
+use Daworks\Sens\Sms\SmsChannel;
+use Daworks\Sens\Sms\SmsMessage;
 use Illuminate\Notifications\Notification;
 
 class SendPurchaseReceipt extends Notification
@@ -152,8 +145,8 @@ php artisan make:notification SendPurchaseInvoice
 
 namespace App\Notifications;
 use Illuminate\Bus\Queueable;
-use Seungmun\Sens\Sms\SmsChannel;
-use Seungmun\Sens\Sms\SmsMessage;
+use Daworks\Sens\Sms\SmsChannel;
+use Daworks\Sens\Sms\SmsMessage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
@@ -229,8 +222,8 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use Seungmun\Sens\AlimTalk\AlimTalkChannel;
-use Seungmun\Sens\AlimTalk\AlimTalkMessage;
+use Daworks\Sens\AlimTalk\AlimTalkChannel;
+use Daworks\Sens\AlimTalk\AlimTalkMessage;
 
 class SendPurchaseInvoice extends Notification
 {
@@ -251,7 +244,7 @@ class SendPurchaseInvoice extends Notification
      * Get the sens sms representation of the notification.
      *
      * @param  mixed  $notifiable
-     * @return \Seungmun\Sens\AlimTalk\AlimTalkMessage
+     * @return \Daworks\Sens\AlimTalk\AlimTalkMessage
      */
     public function toAlimTalk($notifiable)
     {

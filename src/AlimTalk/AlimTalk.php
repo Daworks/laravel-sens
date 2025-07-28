@@ -1,10 +1,10 @@
 <?php
 
-namespace Seungmun\Sens\AlimTalk;
+namespace Daworks\Sens\AlimTalk;
 
 use Exception;
-use Seungmun\Sens\Sens;
-use Seungmun\Sens\Exceptions\SensException;
+use Daworks\Sens\Sens;
+use Daworks\Sens\Exceptions\SensException;
 
 class AlimTalk extends Sens
 {
@@ -22,7 +22,7 @@ class AlimTalk extends Sens
      * @param  array  $params
      * @return void
      *
-     * @throws \Seungmun\Sens\Exceptions\SensException
+     * @throws \Daworks\Sens\Exceptions\SensException
      */
     public function send(array $params)
     {

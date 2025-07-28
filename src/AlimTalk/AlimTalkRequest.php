@@ -1,6 +1,6 @@
 <?php
 
-namespace Seungmun\Sens\AlimTalk;
+namespace Daworks\Sens\AlimTalk;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
@@ -65,7 +65,7 @@ class AlimTalkRequest
     }
 
     /**
-     * @param  \Seungmun\Sens\AlimTalk\AlimTalkMessage  $message
+     * @param  \Daworks\Sens\AlimTalk\AlimTalkMessage  $message
      * @return $this
      */
     public function addMessage(AlimTalkMessage $message)

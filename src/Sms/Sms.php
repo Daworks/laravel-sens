@@ -1,10 +1,10 @@
 <?php
 
-namespace Seungmun\Sens\Sms;
+namespace Daworks\Sens\Sms;
 
 use Exception;
-use Seungmun\Sens\Sens;
-use Seungmun\Sens\Exceptions\SensException;
+use Daworks\Sens\Sens;
+use Daworks\Sens\Exceptions\SensException;
 
 class Sms extends Sens
 {
@@ -13,7 +13,7 @@ class Sms extends Sens
      *
      * @param  array  $params
      * @return void
-     * @throws \Seungmun\Sens\Exceptions\SensException
+     * @throws \Daworks\Sens\Exceptions\SensException
      */
     public function send(array $params)
     {

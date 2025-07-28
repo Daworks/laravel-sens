@@ -1,5 +1,5 @@
 {
-    "name": "seungmun/laravel-sens",
+    "name": "daworks/laravel-sens",
     "description": "NCloud SENS notification channels for Lovely Laravel.",
     "keywords": [
         "laravel",
@@ -8,48 +8,49 @@
         "sens"
     ],
     "license": "MIT",
-    "homepage": "https://open.kakao.com/o/g3dWlf0",
+    "homepage": "https://daworks.io",
     "support": {
-        "issues": "https://github.com/seungmun/laravel-sens/issues",
-        "source": "https://github.com/seungmun/laravel-sens"
+        "issues": "https://github.com/daworks/laravel-sens/issues",
+        "source": "https://github.com/daworks/laravel-sens",
+        "origin": "https://github.com/seungmun/laravel-sens"
     },
     "authors": [
         {
-            "name": "Seungmun Jeong",
-            "email": "seungmunj@gmail.com"
+            "name": "Deokhyoung Lee",
+            "email": "dhlee@daworks.io"
         }
     ],
     "require": {
-        "php": "^7.2|^8.0",
+        "php": "^8.2",
         "ext-json": "*",
-        "guzzlehttp/guzzle": "^6.0|^7.0|^7.2",
-        "illuminate/support": "^6.0|^7.0|^8.0|^9.0",
-        "illuminate/notifications": "~5.8.0|^6.0|^7.0|^8.0|^9.0"
+        "guzzlehttp/guzzle": "^7.2",
+        "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+        "illuminate/notifications": "^9.0|^10.0|^11.0|^12.0"
     },
     "require-dev": {
         "mockery/mockery": "^1.0",
-        "phpunit/phpunit": "^7.0|^8.0|^9.0"
+        "phpunit/phpunit": "^10.0|^11.0"
     },
     "autoload": {
         "psr-4": {
-            "Seungmun\\Sens\\": "src/"
+            "Daworks\\Sens\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Seungmun\\Sens\\Tests\\": "tests/"
+            "Daworks\\Sens\\Tests\\": "tests/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Seungmun\\Sens\\SensServiceProvider"
+                "Daworks\\Sens\\SensServiceProvider"
             ]
         }
     },
     "config": {
         "sort-packages": true
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true
 }

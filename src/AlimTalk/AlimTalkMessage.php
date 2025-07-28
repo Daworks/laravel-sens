@@ -1,6 +1,6 @@
 <?php
 
-namespace Seungmun\Sens\AlimTalk;
+namespace Daworks\Sens\AlimTalk;
 
 class AlimTalkMessage
 {
@@ -92,7 +92,7 @@ class AlimTalkMessage
     /**
      * @param  string  $reserveTime
      * @param  string  $reserveTimeZone
-     * @return \Seungmun\Sens\AlimTalk\AlimTalkMessage
+     * @return \Daworks\Sens\AlimTalk\AlimTalkMessage
      */
     public function setReserved($reserveTime, $reserveTimeZone = 'Asia/Seoul')
     {
