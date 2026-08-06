@@ -7,7 +7,7 @@
         "ncloud",
         "sens"
     ],
-    "license": "MIT",
+    "license": "Apache-2.0",
     "homepage": "https://daworks.io",
     "support": {
         "issues": "https://github.com/daworks/laravel-sens/issues",

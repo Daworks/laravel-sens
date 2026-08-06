@@ -507,3 +507,11 @@ MMS를 `file()`로 발송할 때는 첨부 파일 업로드가 먼저 이루어�
 - Kakao Alimtalk
 - 발송 결과 추적 (requestId / messageId 기반 조회)
 - 예약 발송 상태 조회 및 취소
+
+## License
+
+이 패키지는 [Apache License 2.0](LICENSE.md)으로 배포됩니다.
+
+원본인 [seungmun/laravel-sens](https://github.com/seungmun/laravel-sens)는 MIT 라이선스로 공개되었으며,
+MIT 라이선스가 요구하는 저작권 고지는 [NOTICE](NOTICE) 파일에 그대로 보존되어 있습니다.
+원본에서 유래한 부분에는 해당 고지가 계속 적용됩니다.
