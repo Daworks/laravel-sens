@@ -2,11 +2,18 @@
 
 namespace Daworks\Sens;
 
-use GuzzleHttp\Client;
 use Daworks\Sens\Contracts\Sens as SensContract;
+use Daworks\Sens\Exceptions\SensException;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+use Psr\Http\Message\ResponseInterface;
+use Throwable;
 
 abstract class Sens implements SensContract
 {
+    /** SENS API 기본 호스트. */
+    public const BASE_URL = 'https://sens.apigw.ntruss.com';
+
     /** @var \GuzzleHttp\Client */
     protected $http;
 
@@ -18,6 +25,9 @@ abstract class Sens implements SensContract
 
     /** @var string */
     private $secretKey;
+
+    /** @var string */
+    protected $baseUrl;
 
     /** @var array */
     protected $config = [];
@@ -38,8 +48,17 @@ abstract class Sens implements SensContract
             ->setAccessKey($config['access_key'])
             ->setSecretKey($config['secret_key']);
 
+        $this->baseUrl = rtrim($config['base_url'] ?? self::BASE_URL, '/');
+
         $this->config = $config;
     }
+
+    /**
+     * 이 서비스의 API 경로 접두사. (예: /sms/v2/services/{serviceId})
+     *
+     * @return string
+     */
+    abstract protected function servicePath();
 
     /**
      * Create a new HTTP Request Client.
@@ -49,6 +68,111 @@ abstract class Sens implements SensContract
     protected function httpClient()
     {
         return $this->http ?: $this->http = new Client();
+    }
+
+    /**
+     * HTTP 클라이언트를 교체한다. 테스트에서 응답을 대체할 때 사용한다.
+     *
+     * @param  \GuzzleHttp\Client  $client
+     * @return $this
+     */
+    public function setHttpClient(Client $client)
+    {
+        $this->http = $client;
+
+        return $this;
+    }
+
+    /**
+     * SENS API 를 호출하고 응답 본문을 배열로 돌려준다.
+     *
+     * @param  string  $method
+     * @param  string  $path  호스트를 제외한 요청 경로
+     * @param  array  $body  JSON 으로 직렬화할 요청 바디
+     * @param  array  $query  쿼리 파라미터
+     * @return array
+     *
+     * @throws \Daworks\Sens\Exceptions\SensException
+     */
+    protected function call($method, $path, array $body = [], array $query = [])
+    {
+        if (! $this->assertValidTokens()) {
+            throw SensException::InvalidNCPTokens('NCP tokens are invalid.');
+        }
+
+        $method = strtoupper($method);
+
+        // 서명은 실제로 전송되는 경로(쿼리 스트링 포함)와 완전히 일치해야 한다.
+        // 그래서 쿼리 스트링을 한 번만 만들고 서명과 URL 양쪽에 같은 문자열을 쓴다.
+        $path = $this->buildPath($path, $query);
+
+        $options = ['headers' => $this->prepareRequestHeaders($method, $path)];
+
+        if ($body !== []) {
+            $options['body'] = json_encode($body);
+        }
+
+        try {
+            $response = $this->httpClient()->request($method, $this->baseUrl . $path, $options);
+        } catch (RequestException $e) {
+            throw SensException::fromRequestException($e);
+        } catch (SensException $e) {
+            throw $e;
+        } catch (Throwable $e) {
+            throw SensException::fromThrowable($e);
+        }
+
+        return $this->decodeResponse($response);
+    }
+
+    /**
+     * 쿼리 파라미터를 경로에 붙인다. 값이 비어 있는 파라미터는 제외한다.
+     *
+     * @param  string  $path
+     * @param  array  $query
+     * @return string
+     */
+    protected function buildPath($path, array $query = [])
+    {
+        $query = array_filter($query, function ($value) {
+            return $value !== null && $value !== '' && $value !== [];
+        });
+
+        if ($query === []) {
+            return $path;
+        }
+
+        $queryString = http_build_query($query, '', '&', PHP_QUERY_RFC3986);
+
+        // '@' 는 쿼리에서 인코딩 없이 사용할 수 있는 문자다. 알림톡 채널 아이디
+        // (@channel)가 인코딩된 채로 전달되면 SENS 가 값을 찾지 못할 수 있으므로
+        // 원래 문자로 되돌린다. 서명과 URL 에 같은 문자열을 쓰므로 서명은 유효하다.
+        return $path . '?' . str_replace('%40', '@', $queryString);
+    }
+
+    /**
+     * 응답 본문을 배열로 변환한다. 204 No Content 는 빈 배열이 된다.
+     *
+     * @param  \Psr\Http\Message\ResponseInterface  $response
+     * @return array
+     *
+     * @throws \Daworks\Sens\Exceptions\SensException
+     */
+    protected function decodeResponse(ResponseInterface $response)
+    {
+        $body = trim((string) $response->getBody());
+
+        if ($body === '') {
+            return [];
+        }
+
+        $decoded = json_decode($body, true);
+
+        if (! is_array($decoded)) {
+            throw SensException::malformedResponse($body);
+        }
+
+        return $decoded;
     }
 
     /**
@@ -202,7 +326,7 @@ abstract class Sens implements SensContract
      * generate x-ncp-apigw-signature-v2 token for authentication.
      *
      * @param  string  $method
-     * @param  string  $uri
+     * @param  string  $uri  쿼리 스트링을 포함한 요청 경로
      * @param  string  $timestamp
      * @return string
      */
@@ -215,9 +339,8 @@ abstract class Sens implements SensContract
         array_push($buffer, $timestamp);
         array_push($buffer, $this->getAccessKey());
 
-        $secretKey = utf8_encode($this->getSecretKey());
-        $message = utf8_encode(implode("\n", $buffer));
-        $hash = hex2bin(hash_hmac('sha256', $message, $secretKey));
+        $message = implode("\n", $buffer);
+        $hash = hex2bin(hash_hmac('sha256', $message, $this->getSecretKey()));
 
         return base64_encode($hash);
     }

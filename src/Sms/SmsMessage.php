@@ -31,14 +31,24 @@ class SmsMessage implements SensMessage
     /** @var array */
     public $files = [];
 
+    /** @var string|null 예약 일시 (YYYY-MM-DD HH:mm) */
+    public $reserveTime;
+
+    /** @var string|null 예약 타임존 */
+    public $reserveTimeZone;
+
     /**
      * Create a new SensSmsMessage instance.
+     *
+     * 발신 번호는 기존 설정 위치인 services.php 를 먼저 확인하고,
+     * 값이 없으면 이 패키지의 설정을 사용한다.
      *
      * @return void
      */
     public function __construct()
     {
-        $this->from = config('services.sens.services.sms.sender');
+        $this->from = config('services.sens.services.sms.sender')
+            ?: config('laravel-sens.sms_from');
     }
 
     /**
@@ -135,7 +145,45 @@ class SmsMessage implements SensMessage
     }
 
     /**
+     * 예약 발송 일시를 설정한다.
+     *
+     * 예약 발송의 상태 조회와 취소는 발송 응답의 requestId 로 할 수 있다.
+     *
+     * @param  string  $reserveTime  YYYY-MM-DD HH:mm 형식
+     * @param  string  $reserveTimeZone
+     * @return $this
+     */
+    public function setReserved(string $reserveTime, string $reserveTimeZone = 'Asia/Seoul')
+    {
+        $this->reserveTime = $reserveTime;
+        $this->reserveTimeZone = $reserveTimeZone;
+
+        return $this;
+    }
+
+    /**
+     * 이미 업로드한 첨부 파일을 파일 아이디로 추가한다.
+     *
+     * 같은 이미지를 여러 번 발송할 때 매번 업로드하지 않으려면
+     * Sens::sms()->uploadAttachment() 로 받은 파일 아이디를 재사용한다.
+     *
+     * @param  string  $fileId
+     * @return $this
+     */
+    public function fileId(string $fileId)
+    {
+        array_push($this->files, [
+            'fileId' => $fileId,
+        ]);
+
+        return $this;
+    }
+
+    /**
      * Add a new file into files for MMS message.
+     *
+     * 여기서는 파일을 보관만 하고, 실제 업로드는 발송 직전에 이루어진다.
+     * jpg, jpeg 이미지만 사용할 수 있다.
      *
      * @param  string  $name
      * @param  mixed  $file
@@ -182,6 +230,11 @@ class SmsMessage implements SensMessage
 
         if (! empty($this->files)) {
             $resource['files'] = $this->files;
+        }
+
+        if ($this->reserveTime) {
+            $resource['reserveTime'] = $this->reserveTime;
+            $resource['reserveTimeZone'] = $this->reserveTimeZone;
         }
 
         return $resource;

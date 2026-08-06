@@ -10,16 +10,27 @@ jobs:
         runs-on: ubuntu-latest
 
         strategy:
-            fail-fast: true
+            fail-fast: false
             matrix:
-                php: [ 7.2, 7.3, 7.3, 7.4, 8.0 ]
-                stability: [prefer-stable]
+                php: [ 8.2, 8.3, 8.4 ]
+                laravel: [ '^9.0', '^10.0', '^11.0', '^12.0', '^13.0' ]
+                exclude:
+                    # 라라벨 9.x 는 PHP 8.2 까지, 10.x 는 8.3 까지 지원한다.
+                    - php: 8.3
+                      laravel: '^9.0'
+                    - php: 8.4
+                      laravel: '^9.0'
+                    - php: 8.4
+                      laravel: '^10.0'
+                    # 라라벨 13.x 는 PHP 8.3 이상을 요구한다.
+                    - php: 8.2
+                      laravel: '^13.0'
 
-        name: P${{ matrix.php }}
+        name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v2
+              uses: actions/checkout@v4
 
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
@@ -28,11 +39,25 @@ jobs:
                   tools: composer:v2
                   coverage: none
 
-            - name: Validate composer.json and composer.lock
-              run: composer validate
+            - name: Validate composer.json
+              run: composer validate --no-check-lock
+
+            # 라라벨 9~11 은 지원이 종료되어 CVE-2026-48019 패치가 제공되지 않는다.
+            # composer 가 해당 버전의 illuminate/mail 설치를 차단하므로,
+            # 선언한 지원 범위를 그대로 검증하기 위해 CI 에서만 차단을 해제한다.
+            # 아직 지원 중인 12.x, 13.x 는 새 권고를 놓치지 않도록 검사를 유지한다.
+            - name: Allow installing end-of-life Laravel versions
+              if: matrix.laravel == '^9.0' || matrix.laravel == '^10.0' || matrix.laravel == '^11.0'
+              run: composer config policy.advisories.block false
 
             - name: Install dependencies
-              run: composer update --prefer-dist --no-interaction --no-progress
+              env:
+                  LARAVEL: ${{ matrix.laravel }}
+              run: |
+                  composer require --no-interaction --no-update \
+                      "illuminate/support:$LARAVEL" \
+                      "illuminate/notifications:$LARAVEL"
+                  composer update --prefer-stable --prefer-dist --no-interaction --no-progress
 
             - name: Execute tests
-              run: vendor/bin/phpunit --verbose
+              run: vendor/bin/phpunit

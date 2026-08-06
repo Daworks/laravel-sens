@@ -3,9 +3,7 @@
 namespace Daworks\Sens;
 
 use Daworks\Sens\AlimTalk\AlimTalk;
-use Daworks\Sens\AlimTalk\AlimTalkChannel;
 use Daworks\Sens\Sms\Sms;
-use Daworks\Sens\Sms\SmsChannel;
 use Illuminate\Support\ServiceProvider;
 
 class SensServiceProvider extends ServiceProvider
@@ -21,18 +19,21 @@ class SensServiceProvider extends ServiceProvider
         );
 
         // Register SENS SMS service.
-        $this->app->when(SmsChannel::class)
-            ->needs(Sms::class)
-            ->give(function ($app) {
-                return new Sms($app['config']->get('laravel-sens'));
-            });
+        $this->app->singleton(Sms::class, function ($app) {
+            return new Sms($app['config']->get('laravel-sens'));
+        });
 
         // Register SENS AlimTalk service.
-        $this->app->when(AlimTalkChannel::class)
-            ->needs(AlimTalk::class)
-            ->give(function ($app) {
-                return new AlimTalk($app['config']->get('laravel-sens'));
-            });
+        $this->app->singleton(AlimTalk::class, function ($app) {
+            return new AlimTalk($app['config']->get('laravel-sens'));
+        });
+
+        // 발송 결과 조회를 위한 진입점. (Sens 파사드)
+        $this->app->singleton('sens', function ($app) {
+            return new SensManager($app);
+        });
+
+        $this->app->alias('sens', SensManager::class);
     }
 
     /**
@@ -50,6 +51,11 @@ class SensServiceProvider extends ServiceProvider
      */
     public function provides(): array
     {
-        return [];
+        return [
+            'sens',
+            SensManager::class,
+            Sms::class,
+            AlimTalk::class,
+        ];
     }
 }

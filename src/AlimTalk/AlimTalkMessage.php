@@ -108,9 +108,7 @@ class AlimTalkMessage
      */
     public function setSchedule(string $code)
     {
-        if ($this->scheduleCode) {
-            $this->scheduleCode = $code;
-        }
+        $this->scheduleCode = $code;
 
         return $this;
     }
@@ -145,8 +143,11 @@ class AlimTalkMessage
         $buffer = [
             'plusFriendId' => $this->plusFriendId,
             'templateCode' => $this->templateCode,
-            'scheduleCode' => $this->scheduleCode,
         ];
+
+        if ($this->scheduleCode) {
+            $buffer['scheduleCode'] = $this->scheduleCode;
+        }
 
         if ($this->reserveTime) {
             $buffer['reserveTime'] = $this->reserveTime;
