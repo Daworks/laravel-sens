@@ -18,6 +18,22 @@ class AlimTalkTest extends TestCase
         return (new AlimTalk($this->config()))->setHttpClient($this->fakeClient($responses));
     }
 
+    /**
+     * 알림톡은 SMS 와 다른 서비스 아이디를 쓴다. 알림톡을 쓰지 않아 설정을
+     * 비워 둔 경우에도 SMS 와 마찬가지로 객체는 만들어져야 한다.
+     */
+    public function testConstructsWithMissingOrNullCredentials(): void
+    {
+        $this->assertInstanceOf(AlimTalk::class, new AlimTalk([]));
+
+        $this->assertInstanceOf(AlimTalk::class, new AlimTalk([
+            'alimtalk_service_id' => null,
+            'access_key' => null,
+            'secret_key' => null,
+            'base_url' => null,
+        ]));
+    }
+
     public function testSendReturnsRequestIdAndPerRecipientResults(): void
     {
         $alimTalk = $this->alimTalk([

@@ -3,6 +3,20 @@
 이 파일은 [Keep a Changelog](https://keepachangelog.com/) 형식을 따르며,
 버전은 [유의적 버전](https://semver.org/lang/ko/)을 따릅니다.
 
+## [1.3.2] - 2026-08-06
+
+### 수정
+
+- 알림톡 서비스 아이디가 `null`이어도 클라이언트를 만들 수 있게 했습니다. `1.3.1`에서
+  SMS 쪽은 빈 자격 증명을 견디게 했지만 알림톡 생성자만 값을 그대로 읽고 있어서, 설정
+  파일을 퍼블리시한 뒤 `env('SENS_ALIMTALK_SERVICE_ID')`를 기본값 없이 두면 컨테이너가
+  객체를 만드는 시점에 `TypeError`가 났습니다. 이제 SMS와 똑같이 빈 문자열로 받습니다.
+
+### 문서
+
+- README를 한국어로 다시 쓰고 설정 8개 항목의 지침을 채웠습니다.
+- 변경 이력을 이 파일로 분리했습니다.
+
 ## [1.3.1] - 2026-08-06
 
 ### 수정
@@ -66,6 +80,7 @@
 - [seungmun/laravel-sens](https://github.com/seungmun/laravel-sens)를 포크해 라라벨
   9.x ~ 12.x에서 동작하도록 고친 첫 릴리즈입니다.
 
+[1.3.2]: https://github.com/Daworks/laravel-sens/compare/1.3.1...1.3.2
 [1.3.1]: https://github.com/Daworks/laravel-sens/compare/1.3.0...1.3.1
 [1.3.0]: https://github.com/Daworks/laravel-sens/compare/1.2.0...1.3.0
 [1.2.0]: https://github.com/Daworks/laravel-sens/compare/1.1.0...1.2.0

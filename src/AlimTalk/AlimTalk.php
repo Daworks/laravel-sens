@@ -24,7 +24,10 @@ class AlimTalk extends Sens
     {
         parent::__construct($config);
 
-        $this->setServiceId($config['alimtalk_service_id']);
+        // 알림톡은 SMS 와 다른 서비스 아이디를 쓴다. 빠졌거나 null 인 값은
+        // 베이스 클래스와 같게 빈 문자열로 받는다 — 여기서 TypeError 가 나면
+        // 설정이 비었다는 사유를 남길 자리조차 없이 컨테이너가 죽는다.
+        $this->setServiceId((string) ($config['alimtalk_service_id'] ?? ''));
     }
 
     /**
