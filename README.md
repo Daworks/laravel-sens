@@ -7,8 +7,8 @@ SMS · LMS · MMS와 카카오 알림톡을 보내는 라라벨 Notification 채
 [![latest version](https://img.shields.io/packagist/v/daworks/laravel-sens.svg)](https://packagist.org/packages/daworks/laravel-sens)
 [![license](https://img.shields.io/packagist/l/daworks/laravel-sens.svg)](LICENSE.md)
 
-이 패키지는 [seungmun/laravel-sens](https://github.com/seungmun/laravel-sens)에서 fork하여
-라라벨 9.x 이상에서 동작하도록 컨버전되었습니다.
+이 패키지는 [seungmun/laravel-sens](https://github.com/seungmun/laravel-sens)를 포크해
+라라벨 9.x 이상에서 동작하도록 고친 것입니다.
 
 ## 목차
 
@@ -44,11 +44,11 @@ CI에서 실제로 검증하는 조합은 다음과 같습니다.
 composer require daworks/laravel-sens
 ```
 
-서비스 프로바이더는 패키지 자동 등록(package discovery)으로 등록되므로 `config/app.php`에
+서비스 프로바이더는 패키지 자동 등록(package discovery)이 알아서 잡아 주므로 `config/app.php`에
 직접 추가할 필요가 없습니다.
 
-> **파사드 별칭은 등록되지 않습니다.**
-> 이 패키지는 프로바이더만 등록하고 클래스 별칭은 등록하지 않습니다.
+> **파사드는 별칭 없이 씁니다.**
+> 이 패키지는 서비스 프로바이더만 등록하고 클래스 별칭(alias)은 제공하지 않습니다.
 > 파사드를 쓸 때는 반드시 네임스페이스를 임포트하십시오.
 >
 > ```php
@@ -59,8 +59,8 @@ composer require daworks/laravel-sens
 ### 라라벨 9.x ~ 11.x 를 사용하는 경우
 
 이 버전들은 지원이 종료되어 `CVE-2026-48019`(Laravel CRLF injection in default email rule)
-패치가 제공되지 않습니다. 그래서 Composer가 기본 정책으로 `illuminate/mail` 설치를 차단하며,
-이 패키지도 `illuminate/notifications`를 거쳐 같은 의존성에 걸립니다.
+패치가 제공되지 않습니다. 그래서 Composer가 기본 정책으로 `illuminate/mail` 설치를 차단하는데,
+이 패키지도 `illuminate/notifications`를 통해 같은 패키지를 의존하므로 함께 막힙니다.
 
 패키지 자체는 9.x부터 동작하며 CI에서도 검증하고 있습니다. 설치가 차단된다면
 애플리케이션의 Composer 정책을 조정하거나, 가능하면 라라벨을 12.60 이상으로 올리십시오.
@@ -81,9 +81,9 @@ php artisan vendor:publish --provider="Daworks\Sens\SensServiceProvider" --tag="
 
 ## 사전 준비
 
-발송을 시작하려면 네이버 클라우드 플랫폼 쪽에서 먼저 준비해야 하는 값들이 있습니다.
-콘솔 메뉴 구성은 수시로 바뀌므로 아래에는 **무엇을 준비해야 하는지**만 적고, 실제 절차는
-공식 문서를 참조하십시오.
+발송을 시작하려면 네이버 클라우드 플랫폼 콘솔에서 먼저 준비해야 할 값이 있습니다.
+콘솔 메뉴는 수시로 바뀌므로 여기서는 **무엇이 필요한지**만 정리했습니다. 실제 발급 절차는
+공식 문서를 확인하십시오.
 
 | 준비할 것 | 설명 |
 | --- | --- |
@@ -149,7 +149,7 @@ SMS·LMS·MMS 요청 경로(`/sms/v2/services/{serviceId}`)에 들어갑니다. 
 혼동하면 인증은 통과하지만 서비스를 찾지 못해 실패합니다.
 
 > **퍼블리시한 설정에서 기본값 `''`를 지우지 마십시오.**
-> 다른 키들은 값이 `null`이어도 빈 문자열로 바꿔 처리하지만, 알림톡 클라이언트는 이 값을
+> 다른 항목은 값이 `null`이어도 빈 문자열로 바꿔 처리하지만, 알림톡 클라이언트는 이 값을
 > 그대로 읽습니다. 설정 파일을 퍼블리시한 뒤 다음처럼 기본값을 없애고 환경 변수도 설정하지
 > 않으면, 컨테이너가 클라이언트를 만드는 시점에 `TypeError`가 발생합니다.
 >
@@ -159,7 +159,7 @@ SMS·LMS·MMS 요청 경로(`/sms/v2/services/{serviceId}`)에 들어갑니다. 
 > ```
 >
 > 알림톡을 쓰지 않는다면 값을 비워 두어도 되지만, 기본값 `''`는 남겨 두십시오.
-> (반대로 퍼블리시한 파일에서 이 **줄 전체를 삭제**하면 패키지 기본값이 병합되므로 문제되지 않습니다.)
+> (반대로 퍼블리시한 파일에서 이 **줄 전체를 삭제**하면 패키지 기본값이 병합되므로 문제가 되지 않습니다.)
 
 #### `plus_friend_id`
 
@@ -171,9 +171,9 @@ SMS·LMS·MMS 요청 경로(`/sms/v2/services/{serviceId}`)에 들어갑니다. 
 > **환경 변수 이름의 철자에 주의하십시오.**
 > 이 패키지가 읽는 이름은 `SENS_PlUS_FRIEND_ID`로, `PLUS`가 아니라 **`PlUS`(세 번째 글자가
 > 소문자 `l`)** 입니다. 환경 변수 이름은 대소문자를 구분하므로 `SENS_PLUS_FRIEND_ID`로 적으면
-> 값이 반영되지 않고, 기본값인 플레이스홀더 `'@id'`가 그대로 전송되어 알림톡 발송이 실패합니다.
+> 값이 반영되지 않고, 자리만 채워 둔 기본값 `'@id'`가 그대로 전송되어 알림톡 발송이 실패합니다.
 >
-> 이름을 바로잡는 것은 기존 사용자의 설정을 깨뜨리므로 현재 철자를 유지하고 있습니다.
+> 이름을 바로잡으면 이미 쓰고 있는 설정이 모두 깨지기 때문에 지금 철자를 그대로 두었습니다.
 > 철자를 신경 쓰고 싶지 않다면 설정 파일을 퍼블리시해 직접 값을 적어도 됩니다.
 >
 > ```php
@@ -185,12 +185,12 @@ SMS·LMS·MMS 요청 경로(`/sms/v2/services/{serviceId}`)에 들어갑니다. 
 SMS·LMS·MMS의 발신 번호입니다. 다음 순서로 결정되며, 앞쪽 값이 우선합니다.
 
 1. `SmsMessage::from()`으로 직접 지정한 값
-2. `config('services.sens.services.sms.sender')` — 이전 버전과의 호환을 위해 유지되는 위치
+2. `config('services.sens.services.sms.sender')` — 예전 버전과의 호환을 위해 남겨 둔 자리
 3. `config('laravel-sens.sms_from')`
 
 > **설정으로 넣는 번호는 하이픈 없이 숫자만 적으십시오.**
-> `SmsMessage::from()`으로 넘긴 값에서는 하이픈을 제거하지만, 설정에서 읽은 값은 가공하지 않고
-> 그대로 전송합니다. `.env`에 `055-000-0000`을 넣으면 하이픈이 붙은 채로 API에 전달됩니다.
+> `SmsMessage::from()`으로 넘긴 값은 패키지가 하이픈을 지워 주지만, 설정에서 읽은 값은 손대지 않고
+> 그대로 보냅니다. `.env`에 `055-000-0000`을 넣으면 하이픈이 붙은 채로 API에 전달됩니다.
 
 `config/services.php`에 두고 싶다면:
 
@@ -207,8 +207,8 @@ SMS·LMS·MMS의 발신 번호입니다. 다음 순서로 결정되며, 앞쪽 �
 #### `base_url`
 
 SENS API 호스트입니다. 기본값은 공용 환경인 `https://sens.apigw.ntruss.com`이며,
-**공공기관용(gov)이나 금융용(fin) 환경을 쓰는 경우에만** 변경하십시오. 끝에 슬래시가 있어도
-제거되고, 값이 비어 있으면 기본값을 사용합니다.
+**공공기관용(gov)이나 금융용(fin) 환경을 쓰는 경우에만** 변경하십시오. 끝에 슬래시를 붙여도
+알아서 떼어 내며, 값이 비어 있으면 기본값을 씁니다.
 
 #### `rate_limit`
 
@@ -224,10 +224,10 @@ SENS API 호스트입니다. 기본값은 공용 환경인 `https://sens.apigw.n
 
 ### 자격 증명이 비어 있을 때
 
-값이 비어 있어도 객체 생성은 성공하며, **발송이나 조회를 시도하는 시점에** `SensException`이
-발생합니다. 애플리케이션이 부팅조차 못 하는 상황을 피하기 위한 동작입니다.
+값이 비어 있어도 클라이언트는 정상적으로 만들어지고, **발송하거나 조회할 때** `SensException`이
+발생합니다. 설정이 비었다는 이유만으로 애플리케이션 전체가 뜨지 못하는 일을 막기 위한 것입니다.
 
-유효성 검사는 서비스별로 이루어집니다. SMS는 `service_id`를, 알림톡은
+검사는 서비스마다 따로 합니다. SMS는 `service_id`를, 알림톡은
 `alimtalk_service_id`를 각각 확인하므로, **SMS만 사용한다면 알림톡 관련 값은 비워 두어도**
 SMS 발송에는 영향이 없습니다.
 
@@ -317,7 +317,7 @@ public function toSms($notifiable)
 ```
 
 > **첨부 파일에 대하여**
-> SENS는 MMS 첨부 파일을 먼저 업로드해 파일 아이디를 받은 뒤 발송하는 방식을 사용합니다.
+> SENS는 MMS 첨부 파일을 먼저 업로드해 파일 아이디를 받은 뒤 발송하는 방식입니다.
 > 위처럼 `file()`로 파일을 넘기면 패키지가 발송 직전에 업로드를 대신 처리하므로
 > 코드를 바꿀 필요는 없습니다. 다만 발송 한 번에 HTTP 요청이 두 번 나갑니다.
 >
@@ -458,7 +458,7 @@ $response->isAccepted();   // true
 $response->isSuccessful(); // true
 ```
 
-알림톡은 즉시 발송인 경우 수신자별 접수 결과가 함께 옵니다. HTTP 응답이 `202`여도
+예약이 아닌 즉시 발송이라면 알림톡은 수신자별 접수 결과를 응답에 함께 담아 줍니다. HTTP 응답이 `202`여도
 개별 수신자의 접수가 실패할 수 있으므로 `isSuccessful()`로 함께 확인하십시오.
 
 ```php
@@ -478,7 +478,7 @@ foreach ($response->failedMessages() as $message) {
 
 ### 2) Notification으로 발송한 경우
 
-채널의 반환값은 라라벨이 `NotificationSent` 이벤트의 `$response`로 전달합니다.
+채널이 돌려준 값을 라라벨이 `NotificationSent` 이벤트의 `$response`에 담아 전달합니다.
 큐로 발송하면 호출부에서는 반환값을 받을 수 없으므로, **이벤트 리스너로 기록하는 방식을 권장합니다.**
 
 ```php
@@ -546,7 +546,7 @@ $result->isDelivered();       // 둘 중 하나로 전달되었는지
 ```
 
 > **폴링할 때 주의**
-> 예약 발송이거나 발송 직후에는 SENS가 메시지 목록을 비워서 응답합니다.
+> 예약 발송이거나 발송 직후에는 SENS가 빈 메시지 목록을 돌려줍니다.
 > 이때 `isSuccessful()`은 `false`지만 실패한 것이 아니라 **아직 결과가 없는 상태**입니다.
 > 실패로 처리하기 전에 `isPending()`을 먼저 확인하십시오.
 >
@@ -600,7 +600,7 @@ if ($status->isPending()) {
 
 ## 오류 처리
 
-인증 실패나 잘못된 요청처럼 SENS가 오류를 응답하면 `SensException`이 발생하며,
+인증 실패나 잘못된 요청처럼 SENS가 오류를 돌려주면 `SensException`이 발생하며,
 예외 객체에서 상태 코드와 응답 본문을 확인할 수 있습니다.
 
 ```php
@@ -619,7 +619,7 @@ try {
 접수 자체는 성공했지만 일부 수신자만 실패한 경우에는 예외가 발생하지 않습니다.
 이때는 응답 객체의 `isSuccessful()` / `failedMessages()`로 확인하십시오.
 
-MMS를 `file()`로 발송할 때는 첨부 파일 업로드가 먼저 이루어지므로,
+MMS를 `file()`로 발송할 때는 첨부 파일을 먼저 업로드하므로,
 `send()`에서 발생한 예외가 **업로드 단계의 실패**일 수 있습니다.
 이 경우 발송 요청이 나가지 않았으므로 `requestId`가 없습니다.
 두 단계를 구분해서 처리하려면 `uploadAttachment()`를 직접 호출하고 `fileId()`로 넘기십시오.
@@ -671,7 +671,7 @@ MIT 라이선스가 요구하는 저작권 고지는 [NOTICE](NOTICE) 파일에 
 - SMS/알림톡 클라이언트가 컨테이너에 싱글톤으로 등록되어,
   채널 밖에서도 `app(Sms::class)` 또는 `Sens` 파사드로 사용할 수 있습니다.
 - MMS 첨부 파일이 현재 API 명세에 맞춰 **업로드 후 파일 아이디로 발송**하는 방식으로 바뀌었습니다.
-  `SmsMessage::file()`을 쓰던 코드는 그대로 동작하며, 발송 시 업로드가 함께 이루어집니다.
+  `SmsMessage::file()`을 쓰던 코드는 그대로 동작하며, 발송할 때 업로드도 함께 처리합니다.
 - `AlimTalkMessage::setSchedule()`이 값을 설정하지 못하던 문제를 고쳤습니다.
   더불어 스케줄 코드를 지정하지 않은 경우 요청에 `scheduleCode: null`을 보내지 않습니다.
 - 발신 번호를 `config/laravel-sens.php`의 `sms_from`으로도 설정할 수 있습니다.
