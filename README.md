@@ -22,6 +22,7 @@ SMS · LMS · MMS와 카카오 알림톡을 보내는 라라벨 Notification 채
 - [예약 발송 관리](#예약-발송-관리)
 - [오류 처리](#오류-처리)
 - [테스트](#테스트)
+- [변경 이력](#변경-이력)
 - [라이선스](#라이선스)
 
 ## 요구 사항
@@ -645,6 +646,11 @@ Sens::sms()->setHttpClient($mockedGuzzleClient);
 - 발송 결과 추적 (`requestId` / `messageId` 기반 조회)
 - 예약 발송 상태 조회 및 취소
 
+## 변경 이력
+
+버전별 변경 내용은 [CHANGELOG.md](CHANGELOG.md)에 정리되어 있습니다.
+`1.1.0`에서 발송 결과 추적 기능이 들어오며 바뀐 부분도 여기에 있습니다.
+
 ## 커뮤니티
 
 - [라라벨코리아](https://laravel.kr/)
@@ -657,24 +663,3 @@ Sens::sms()->setHttpClient($mockedGuzzleClient);
 원본인 [seungmun/laravel-sens](https://github.com/seungmun/laravel-sens)는 MIT 라이선스로 공개되었으며,
 MIT 라이선스가 요구하는 저작권 고지는 [NOTICE](NOTICE) 파일에 그대로 보존되어 있습니다.
 원본에서 유래한 부분에는 해당 고지가 계속 적용됩니다.
-
-<details>
-<summary><strong>변경 사항 안내</strong> (발송 결과 추적 기능 도입 시점)</summary>
-
-발송 결과 추적 기능이 추가되면서 다음이 바뀌었습니다. 기존 발송 코드는 그대로 동작합니다.
-
-- `Sms::send()` / `AlimTalk::send()`가 `void` 대신 `SendResponse`를 반환합니다.
-- 두 Notification 채널의 `send()`에서 `: void` 반환 타입 선언이 제거되었습니다.
-  채널을 상속해 재정의한 경우 시그니처를 맞춰 주십시오.
-- `Contracts\Sens` 인터페이스에 조회 메서드가 추가되었습니다.
-  이 인터페이스를 직접 구현한 코드가 있다면 새 메서드를 구현해야 합니다.
-- SMS/알림톡 클라이언트가 컨테이너에 싱글톤으로 등록되어,
-  채널 밖에서도 `app(Sms::class)` 또는 `Sens` 파사드로 사용할 수 있습니다.
-- MMS 첨부 파일이 현재 API 명세에 맞춰 **업로드 후 파일 아이디로 발송**하는 방식으로 바뀌었습니다.
-  `SmsMessage::file()`을 쓰던 코드는 그대로 동작하며, 발송할 때 업로드도 함께 처리합니다.
-- `AlimTalkMessage::setSchedule()`이 값을 설정하지 못하던 문제를 고쳤습니다.
-  더불어 스케줄 코드를 지정하지 않은 경우 요청에 `scheduleCode: null`을 보내지 않습니다.
-- 발신 번호를 `config/laravel-sens.php`의 `sms_from`으로도 설정할 수 있습니다.
-  기존 `config/services.php` 설정이 있으면 그 값이 우선합니다.
-
-</details>
