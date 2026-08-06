@@ -19,6 +19,23 @@ class SmsTest extends TestCase
         return (new Sms($this->config()))->setHttpClient($this->fakeClient($responses));
     }
 
+    /**
+     * 계정을 아직 발급받지 못했거나 퍼블리시한 설정에서 기본값을 지워 env() 가
+     * null 을 돌려주는 경우가 흔하다. 그때 생성자에서 TypeError 로 죽으면
+     * "설정이 비었다" 는 사유를 남길 자리조차 없이 앱이 부팅에 실패한다.
+     */
+    public function testConstructsWithMissingOrNullCredentials(): void
+    {
+        $this->assertInstanceOf(Sms::class, new Sms([]));
+
+        $this->assertInstanceOf(Sms::class, new Sms([
+            'service_id' => null,
+            'access_key' => null,
+            'secret_key' => null,
+            'base_url' => null,
+        ]));
+    }
+
     public function testSendReturnsRequestId(): void
     {
         $sms = $this->sms([

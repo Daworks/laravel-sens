@@ -44,11 +44,20 @@ abstract class Sens implements SensContract
     {
         $this->httpClient();
 
-        $this->setServiceId($config['service_id'])
-            ->setAccessKey($config['access_key'])
-            ->setSecretKey($config['secret_key']);
+        /*
+         * 빠졌거나 null 인 값은 빈 문자열로 받는다.
+         *
+         * 계정을 아직 발급받지 못했거나, 퍼블리시한 설정 파일에서 기본값을 지워
+         * env() 가 null 을 돌려주는 경우가 흔하다. 그대로 넘기면 setter 의 string
+         * 타입에서 TypeError 가 나 컨테이너가 이 객체를 만들지도 못한다 — 그러면
+         * "설정이 비었다" 는 사유를 남길 자리조차 없이 죽는다. 값이 비어 있다는
+         * 판단은 실제로 발송을 시도하는 쪽이 해야 한다.
+         */
+        $this->setServiceId((string) ($config['service_id'] ?? ''))
+            ->setAccessKey((string) ($config['access_key'] ?? ''))
+            ->setSecretKey((string) ($config['secret_key'] ?? ''));
 
-        $this->baseUrl = rtrim($config['base_url'] ?? self::BASE_URL, '/');
+        $this->baseUrl = rtrim((string) ($config['base_url'] ?? '') ?: self::BASE_URL, '/');
 
         $this->config = $config;
     }
