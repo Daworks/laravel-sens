@@ -1,5 +1,9 @@
 # NCLOUD SENS notifications channel for Laravel
 
+[![tests](https://github.com/Daworks/laravel-sens/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/Daworks/laravel-sens/actions/workflows/tests.yml)
+[![latest version](https://img.shields.io/packagist/v/daworks/laravel-sens.svg)](https://packagist.org/packages/daworks/laravel-sens)
+[![license](https://img.shields.io/packagist/l/daworks/laravel-sens.svg)](LICENSE.md)
+
 이 패키지는 https://github.com/seungmun/laravel-sens에서 fork하여 라라벨 9.x이상 버전에서 동작하도록 컨버전되었습니다.
 
 This package makes it easy to send notification using [ncloud sens](//ncloud.com/product/applicationService/sens) with Laravel.
