@@ -1,94 +1,200 @@
-# NCLOUD SENS notifications channel for Laravel
+# laravel-sens
+
+네이버 클라우드 플랫폼 [SENS](https://www.ncloud.com/product/applicationService/sens)로
+SMS · LMS · MMS와 카카오 알림톡을 보내는 라라벨 Notification 채널입니다.
 
 [![tests](https://github.com/Daworks/laravel-sens/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/Daworks/laravel-sens/actions/workflows/tests.yml)
 [![latest version](https://img.shields.io/packagist/v/daworks/laravel-sens.svg)](https://packagist.org/packages/daworks/laravel-sens)
 [![license](https://img.shields.io/packagist/l/daworks/laravel-sens.svg)](LICENSE.md)
 
-이 패키지는 https://github.com/seungmun/laravel-sens에서 fork하여 라라벨 9.x이상 버전에서 동작하도록 컨버전되었습니다.
+이 패키지는 [seungmun/laravel-sens](https://github.com/seungmun/laravel-sens)에서 fork하여
+라라벨 9.x 이상에서 동작하도록 컨버전되었습니다.
 
-This package makes it easy to send notification using [ncloud sens](//ncloud.com/product/applicationService/sens) with Laravel.
+## 목차
 
-And We are working on an unofficial sdk development public project so that ncloud sens can be used in php more flexibly.
+- [요구 사항](#요구-사항)
+- [설치](#설치)
+- [사전 준비](#사전-준비)
+- [설정](#설정)
+- [발송](#발송)
+- [메시지 빌더 레퍼런스](#메시지-빌더-레퍼런스)
+- [발송 결과 추적](#발송-결과-추적)
+- [예약 발송 관리](#예약-발송-관리)
+- [오류 처리](#오류-처리)
+- [테스트](#테스트)
+- [라이선스](#라이선스)
 
-## Official Community
+## 요구 사항
 
-- [라라벨코리아](https://laravel.kr/)
-- [라라벨코리아 오픈채팅](https://open.kakao.com/o/g3dWlf0)
+CI에서 실제로 검증하는 조합은 다음과 같습니다.
 
-## Prerequisites
+| 라라벨 | PHP |
+| --- | --- |
+| 9.x | 8.2 |
+| 10.x | 8.2, 8.3 |
+| 11.x | 8.2, 8.3, 8.4 |
+| 12.x | 8.2, 8.3, 8.4 |
+| 13.x | 8.3, 8.4 |
 
-Before you get started, you need the following:
+`ext-json`과 `guzzlehttp/guzzle` ^7.2가 필요하며, 둘 다 Composer가 함께 설치합니다.
 
-- PHP >= 8.2 (라라벨 13.x 를 사용하는 경우 PHP >= 8.3)
-- Laravel (9.x / 10.x / 11.x / 12.x / 13.x)
+## 설치
 
-## Installation
-
-You can install the package via composer:
-
-``` bash
+```bash
 composer require daworks/laravel-sens
 ```
 
-The package will automatically register itself.
+서비스 프로바이더는 패키지 자동 등록(package discovery)으로 등록되므로 `config/app.php`에
+직접 추가할 필요가 없습니다.
 
-> **라라벨 9.x ~ 11.x 를 사용하는 경우**
-> 이 버전들은 지원이 종료되어 `CVE-2026-48019`(Laravel CRLF injection in default email rule)
-> 패치가 제공되지 않습니다. 그래서 Composer가 기본 정책으로 `illuminate/mail` 설치를 차단하며,
-> 이 패키지도 `illuminate/notifications`를 거쳐 같은 의존성에 걸립니다.
+> **파사드 별칭은 등록되지 않습니다.**
+> 이 패키지는 프로바이더만 등록하고 클래스 별칭은 등록하지 않습니다.
+> 파사드를 쓸 때는 반드시 네임스페이스를 임포트하십시오.
 >
-> 패키지 자체는 9.x부터 동작하며 CI에서도 검증하고 있습니다. 설치가 차단된다면
-> 애플리케이션의 Composer 정책을 조정하거나, 가능하면 라라벨을 12.60 이상으로 올리십시오.
->
-> ```bash
-> # 취약점을 인지한 상태에서 설치를 진행하려면
-> composer config policy.advisories.ignore-id '["PKSA-zwc5-qtrz-zm1n"]'
+> ```php
+> use Daworks\Sens\Facades\Sens;   // 필요
+> // \Sens::sms() 처럼 전역 별칭으로는 동작하지 않습니다.
 > ```
 
-You can publish the config with:
+### 라라벨 9.x ~ 11.x 를 사용하는 경우
+
+이 버전들은 지원이 종료되어 `CVE-2026-48019`(Laravel CRLF injection in default email rule)
+패치가 제공되지 않습니다. 그래서 Composer가 기본 정책으로 `illuminate/mail` 설치를 차단하며,
+이 패키지도 `illuminate/notifications`를 거쳐 같은 의존성에 걸립니다.
+
+패키지 자체는 9.x부터 동작하며 CI에서도 검증하고 있습니다. 설치가 차단된다면
+애플리케이션의 Composer 정책을 조정하거나, 가능하면 라라벨을 12.60 이상으로 올리십시오.
+
+```bash
+# 취약점을 인지한 상태에서 설치를 진행하려면
+composer config policy.advisories.ignore-id '["PKSA-zwc5-qtrz-zm1n"]'
+```
+
+### 설정 파일 퍼블리시
+
 ```bash
 php artisan vendor:publish --provider="Daworks\Sens\SensServiceProvider" --tag="config"
 ```
 
-Also, you can use it without publish the config file can be used simply by adding environment variables with:
+퍼블리시하면 `config/laravel-sens.php`가 생성됩니다. 퍼블리시하지 않아도 패키지 기본 설정이
+병합되므로, `.env`에 환경 변수만 넣어도 그대로 동작합니다.
 
-```bash
-SENS_ACCESS_KEY=your-sens-access-key
-SENS_SECRET_KEY=your-sens-secret-key
-SENS_SERVICE_ID=your-sens-service-id
-SENS_ALIMTALK_SERVICE_ID=your-alimtalk-service-id
-SENS_PlUS_FRIEND_ID=your-plus-friend-id
-SENS_SMS_FROM=1234567890
+## 사전 준비
+
+발송을 시작하려면 네이버 클라우드 플랫폼 쪽에서 먼저 준비해야 하는 값들이 있습니다.
+콘솔 메뉴 구성은 수시로 바뀌므로 아래에는 **무엇을 준비해야 하는지**만 적고, 실제 절차는
+공식 문서를 참조하십시오.
+
+| 준비할 것 | 설명 |
+| --- | --- |
+| 인증키 (Access Key / Secret Key) | 네이버 클라우드 플랫폼 계정 단위로 발급하는 API 인증키입니다. SENS 전용 값이 아니라 계정 공통 값입니다. |
+| SMS 서비스 ID | SENS에서 SMS 프로젝트를 만들면 발급되는 아이디입니다. 콘솔에 표시된 값을 그대로 복사하십시오. |
+| 발신 번호 | SENS에 **사전 등록·승인된 번호**만 발신 번호로 쓸 수 있습니다. 등록되지 않은 번호로 보내면 발송이 거절됩니다. |
+| 알림톡 서비스 ID | 알림톡 프로젝트의 아이디로, **SMS 서비스 ID와 다른 값**입니다. |
+| 카카오톡 채널 ID | `@`로 시작하는 채널 검색용 아이디입니다. SENS에 연동된 채널이어야 합니다. |
+| 알림톡 템플릿 코드 | 카카오 심사를 통과해 등록된 템플릿의 코드입니다. 발송 본문은 승인된 템플릿과 일치해야 합니다. |
+
+관련 공식 API 명세:
+
+- [Project API](https://api.ncloud-docs.com/docs/ai-application-service-sens-projectv2)
+- [SMS API](https://api.ncloud-docs.com/docs/ai-application-service-sens-smsv2)
+- [알림톡 API](https://api.ncloud-docs.com/docs/ai-application-service-sens-alimtalkv2)
+
+## 설정
+
+### 한눈에 보기
+
+| 설정 키 (`config/laravel-sens.php`) | 환경 변수 | 기본값 | 필요한 경우 |
+| --- | --- | --- | --- |
+| `service_id` | `SENS_SERVICE_ID` | `''` | SMS · LMS · MMS |
+| `alimtalk_service_id` | `SENS_ALIMTALK_SERVICE_ID` | `''` | 알림톡 |
+| `plus_friend_id` | `SENS_PlUS_FRIEND_ID` | `'@id'` | 알림톡 |
+| `access_key` | `SENS_ACCESS_KEY` | `''` | 공통 (필수) |
+| `secret_key` | `SENS_SECRET_KEY` | `''` | 공통 (필수) |
+| `sms_from` | `SENS_SMS_FROM` | `null` | SMS · LMS · MMS |
+| `base_url` | `SENS_BASE_URL` | `https://sens.apigw.ntruss.com` | 공공/금융 환경만 |
+| `rate_limit` | `SENS_RATE_LIMIT` | `30` | 선택 |
+
+`.env` 예시:
+
+```dotenv
+SENS_ACCESS_KEY=your-access-key
+SENS_SECRET_KEY=your-secret-key
+SENS_SERVICE_ID=ncp:sms:kr:000000000000:your-project
+SENS_SMS_FROM=0550000000
+
+# 알림톡을 사용할 때만
+SENS_ALIMTALK_SERVICE_ID=ncp:kkobizmsg:kr:000000000000:your-project
+SENS_PlUS_FRIEND_ID=@your-channel
+
+# 필요할 때만
 SENS_RATE_LIMIT=30
 ```
 
-### `SENS_RATE_LIMIT`
+### 항목별 지침
 
-초당 발송 건수입니다. 한도를 넘긴 요청을 SENS 는 기다리게 하지 않고 그 자리에서
-`429` 로 거절하므로, 대량 발송에서 이 값을 넘겨 부르면 넘친 만큼이 그대로 실패로
-남습니다.
+#### `access_key` / `secret_key`
 
-**이 패키지는 값을 두기만 하고 스스로 조이지는 않습니다.** 발송을 어떤 간격으로
-부를지는 큐·워커 구성에 따라 달라서 호출하는 쪽이 정해야 합니다. `config('laravel-sens.rate_limit')`
-를 읽어 실제로 제한하는 것은 쓰는 쪽의 몫입니다. `0` 이나 음수는 '제한하지 않음'
-으로 씁니다.
+모든 요청의 서명(`x-ncp-apigw-signature-v2`)을 만드는 데 쓰입니다. SMS와 알림톡이 같은 값을
+공유합니다.
 
-If you want to put the `sms_from` value in your .env,
+#### `service_id`
 
-config/services.php
+SMS·LMS·MMS 요청 경로(`/sms/v2/services/{serviceId}`)에 들어갑니다. **알림톡에는 쓰이지
+않습니다.**
+
+#### `alimtalk_service_id`
+
+알림톡 요청 경로(`/alimtalk/v2/services/{serviceId}`)에 들어갑니다. SMS 서비스 아이디와
+혼동하면 인증은 통과하지만 서비스를 찾지 못해 실패합니다.
+
+> **퍼블리시한 설정에서 기본값 `''`를 지우지 마십시오.**
+> 다른 키들은 값이 `null`이어도 빈 문자열로 바꿔 처리하지만, 알림톡 클라이언트는 이 값을
+> 그대로 읽습니다. 설정 파일을 퍼블리시한 뒤 다음처럼 기본값을 없애고 환경 변수도 설정하지
+> 않으면, 컨테이너가 클라이언트를 만드는 시점에 `TypeError`가 발생합니다.
+>
+> ```php
+> 'alimtalk_service_id' => env('SENS_ALIMTALK_SERVICE_ID'),        // 위험 — null 이 전달됩니다
+> 'alimtalk_service_id' => env('SENS_ALIMTALK_SERVICE_ID', ''),    // 패키지 기본값
+> ```
+>
+> 알림톡을 쓰지 않는다면 값을 비워 두어도 되지만, 기본값 `''`는 남겨 두십시오.
+> (반대로 퍼블리시한 파일에서 이 **줄 전체를 삭제**하면 패키지 기본값이 병합되므로 문제되지 않습니다.)
+
+#### `plus_friend_id`
+
+카카오톡 채널 아이디(`@`로 시작)입니다. 두 곳에서 쓰입니다.
+
+- `AlimTalkMessage`를 만들 때 채널 아이디를 지정하지 않으면 이 값이 기본값이 됩니다.
+- `requestId` 없이 알림톡 발송 목록을 조회할 때 조회 대상 채널로 쓰입니다.
+
+> **환경 변수 이름의 철자에 주의하십시오.**
+> 이 패키지가 읽는 이름은 `SENS_PlUS_FRIEND_ID`로, `PLUS`가 아니라 **`PlUS`(세 번째 글자가
+> 소문자 `l`)** 입니다. 환경 변수 이름은 대소문자를 구분하므로 `SENS_PLUS_FRIEND_ID`로 적으면
+> 값이 반영되지 않고, 기본값인 플레이스홀더 `'@id'`가 그대로 전송되어 알림톡 발송이 실패합니다.
+>
+> 이름을 바로잡는 것은 기존 사용자의 설정을 깨뜨리므로 현재 철자를 유지하고 있습니다.
+> 철자를 신경 쓰고 싶지 않다면 설정 파일을 퍼블리시해 직접 값을 적어도 됩니다.
+>
+> ```php
+> 'plus_friend_id' => env('SENS_PLUS_FRIEND_ID', '@id'),
+> ```
+
+#### `sms_from`
+
+SMS·LMS·MMS의 발신 번호입니다. 다음 순서로 결정되며, 앞쪽 값이 우선합니다.
+
+1. `SmsMessage::from()`으로 직접 지정한 값
+2. `config('services.sens.services.sms.sender')` — 이전 버전과의 호환을 위해 유지되는 위치
+3. `config('laravel-sens.sms_from')`
+
+> **설정으로 넣는 번호는 하이픈 없이 숫자만 적으십시오.**
+> `SmsMessage::from()`으로 넘긴 값에서는 하이픈을 제거하지만, 설정에서 읽은 값은 가공하지 않고
+> 그대로 전송합니다. `.env`에 `055-000-0000`을 넣으면 하이픈이 붙은 채로 API에 전달됩니다.
+
+`config/services.php`에 두고 싶다면:
 
 ```php
-/*
-|--------------------------------------------------------------------------
-| SMS "From" Number
-|--------------------------------------------------------------------------
-|
-| This configuration option defines the phone number that will be used as
-| the "from" number for all outgoing text messages. You should provide
-| the number you have already reserved within your Naver Cloud Platform
-| /sens/sms-calling-number of dashboard.
-|
-*/
 'sens' => [
     'services' => [
         'sms' => [
@@ -98,17 +204,46 @@ config/services.php
 ],
 ```
 
-.env:
+#### `base_url`
 
-```env
-SENS_SMS_FROM=1234567890
+SENS API 호스트입니다. 기본값은 공용 환경인 `https://sens.apigw.ntruss.com`이며,
+**공공기관용(gov)이나 금융용(fin) 환경을 쓰는 경우에만** 변경하십시오. 끝에 슬래시가 있어도
+제거되고, 값이 비어 있으면 기본값을 사용합니다.
+
+#### `rate_limit`
+
+초당 발송 건수입니다. 한도를 넘긴 요청을 SENS는 기다리게 하지 않고 그 자리에서 `429`로
+거절하므로, 대량 발송에서 이 값을 넘겨 부르면 넘친 만큼이 그대로 실패로 남습니다.
+
+**이 패키지는 값을 두기만 하고 스스로 조이지는 않습니다.** 발송을 어떤 간격으로 부를지는
+큐·워커 구성에 따라 달라서 호출하는 쪽이 정해야 합니다. `config('laravel-sens.rate_limit')`를
+읽어 실제로 제한하는 것은 쓰는 쪽의 몫입니다. `0`이나 음수는 '제한하지 않음'으로 씁니다.
+
+실제 허용 한도는 상품과 계약에 따라 다르므로 콘솔에서 확인한 값을 넣으십시오.
+
+### 자격 증명이 비어 있을 때
+
+값이 비어 있어도 객체 생성은 성공하며, **발송이나 조회를 시도하는 시점에** `SensException`이
+발생합니다. 애플리케이션이 부팅조차 못 하는 상황을 피하기 위한 동작입니다.
+
+유효성 검사는 서비스별로 이루어집니다. SMS는 `service_id`를, 알림톡은
+`alimtalk_service_id`를 각각 확인하므로, **SMS만 사용한다면 알림톡 관련 값은 비워 두어도**
+SMS 발송에는 영향이 없습니다.
+
+### 설정 캐시
+
+`php artisan config:cache`를 사용하는 환경이라면, `.env`를 고친 뒤 반드시 캐시를 다시
+만드십시오. 캐시된 설정에서는 `env()` 호출이 `null`을 돌려줍니다.
+
+```bash
+php artisan config:clear && php artisan config:cache
 ```
 
-## Usage
+## 발송
 
-This package can be used using with the Laravel default notification feature.
+라라벨 기본 Notification 기능을 그대로 사용합니다.
 
-##### 1) Request to send a SMS
+### 1) SMS · LMS
 
 ```bash
 php artisan make:notification SendPurchaseReceipt
@@ -119,125 +254,65 @@ php artisan make:notification SendPurchaseReceipt
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
 use Daworks\Sens\Sms\SmsChannel;
 use Daworks\Sens\Sms\SmsMessage;
+use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
 class SendPurchaseReceipt extends Notification
 {
     use Queueable;
 
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @param  mixed  $notifiable
-     * @return array
-     */
     public function via($notifiable)
     {
         return [SmsChannel::class];
     }
 
-    /**
-     * Get the sens sms representation of the notification.
-     *
-     * @param  mixed  $notifiable
-     * @return SmsMessage
-     */
     public function toSms($notifiable)
     {
         return (new SmsMessage)
             ->to($notifiable->phone)
-            ->from('055-000-0000')
-            ->content('Welcome: https://open.kakao.com/o/g3dWlf0')
-            ->contentType('AD')// You can ignore it (default: COMM)
-            ->type('SMS');  // You can ignore it (default: SMS)
+            ->from('055-000-0000')   // 생략하면 설정값을 사용합니다.
+            ->content('주문이 접수되었습니다.')
+            ->contentType('AD')      // 생략 가능 (기본: COMM)
+            ->type('SMS');           // 생략 가능 (기본: SMS)
     }
 }
 ```
 
 ```php
-use App\User;
+use App\Models\User;
 use App\Notifications\SendPurchaseReceipt;
 
 User::find(1)->notify(new SendPurchaseReceipt);
 ```
 
-##### 2) Request to send MMS
+장문을 보낼 때는 `type('LMS')`로 바꾸고 `subject()`로 제목을 지정합니다. 본문 길이 제한을
+넘으면 SENS가 요청을 거절하므로, 정확한 한도는 [SMS API 명세](https://api.ncloud-docs.com/docs/ai-application-service-sens-smsv2)를
+확인하십시오.
 
-```bash
-php artisan make:notification SendPurchaseInvoice
-```
+한 번의 요청으로 여러 명에게 보내려면 `to()`를 여러 번 호출합니다.
 
 ```php
-<?php
+(new SmsMessage)
+    ->to('01000000001')
+    ->to('01000000002')
+    ->content('공지 사항입니다.');
+```
 
-namespace App\Notifications;
-use Illuminate\Bus\Queueable;
-use Daworks\Sens\Sms\SmsChannel;
-use Daworks\Sens\Sms\SmsMessage;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Notifications\Notification;
-use Illuminate\Contracts\Filesystem\FileNotFoundException;
+### 2) MMS
 
-class SendPurchaseInvoice extends Notification
+```php
+public function toSms($notifiable)
 {
-    use Queueable;
-    
-    /** @var UploadedFile */
-    private $image;
-    
-    /**
-     * Create a new notification instance.
-     *
-     * @param  UploadedFile  $image
-     */
-    public function __construct(UploadedFile $image)
-    {
-        $this->image = $image;
-    }
-
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @param  mixed  $notifiable
-     * @return array
-     */
-    public function via($notifiable)
-    {
-        return [SmsChannel::class];
-    }
-
-    /**
-     * Get the sens sms representation of the notification.
-     *
-     * @param  mixed  $notifiable
-     * @return SmsMessage
-     * @throws FileNotFoundException
-     */
-    public function toSms($notifiable)
-    {
-        return (new SmsMessage)
-            ->type('MMS')
-            ->to($notifiable->phone)
-            ->from('055-000-0000')
-            ->content('This is your invoice.\nCheck out the attached image.')
-            /* file's path string or UploadedFile object of Illuminate are allowed */
-            ->file('filename.jpg', $this->image);
-    }
+    return (new SmsMessage)
+        ->type('MMS')
+        ->to($notifiable->phone)
+        ->subject('청구서')
+        ->content("청구서를 첨부합니다.")
+        /* 파일 경로 문자열 또는 Illuminate\Http\UploadedFile 객체 */
+        ->file('invoice.jpg', $this->image);
 }
-```
-
-```php
-<?php
-
-use App\User;
-use App\Notifications\SendPurchaseReceipt;
-
-// In this case, you should only pass UploadedFile object as a parameter.
-// If when you need to pass a file path string as a parameter, change your notification class up.
-User::find(1)->notify(new SendPurchaseReceipt(request()->file('image')));
 ```
 
 > **첨부 파일에 대하여**
@@ -262,59 +337,105 @@ User::find(1)->notify(new SendPurchaseReceipt(request()->file('image')));
 >
 > jpg, jpeg 이미지만 사용할 수 있으며 최대 300KB, 해상도 1500x1440까지 허용됩니다.
 
-
-Now `User id: 1` which has own phone attribute would receive a sms or mms message soon.
-
-##### 3) Request send AlimTalk
+### 3) 알림톡
 
 ```php
 <?php
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Notification;
 use Daworks\Sens\AlimTalk\AlimTalkChannel;
 use Daworks\Sens\AlimTalk\AlimTalkMessage;
+use Illuminate\Bus\Queueable;
+use Illuminate\Notifications\Notification;
 
-class SendPurchaseInvoice extends Notification
+class SendShippingNotice extends Notification
 {
     use Queueable;
 
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @param  mixed  $notifiable
-     * @return array
-     */
     public function via($notifiable)
     {
         return [AlimTalkChannel::class];
     }
 
-    /**
-     * Get the sens sms representation of the notification.
-     *
-     * @param  mixed  $notifiable
-     * @return \Daworks\Sens\AlimTalk\AlimTalkMessage
-     */
     public function toAlimTalk($notifiable)
     {
         return (new AlimTalkMessage())
-            ->templateCode('TEMPLATE001') // required
-            ->to($notifiable->phone) // required
-            ->content('Evans, Your order is shipped.') //required
-            ->countryCode('82') // optional
-            ->addButton(['type' => 'DS', 'name' => 'Tracking of Shipment']) // optional
-            ->setReserved('2020-05-31 14:20', 'Asia/Seoul'); // optional
+            ->templateCode('TEMPLATE001')                            // 필수
+            ->to($notifiable->phone)                                 // 필수
+            ->content('주문하신 상품이 발송되었습니다.')                  // 필수
+            ->countryCode('82')                                      // 선택
+            ->addButton(['type' => 'DS', 'name' => '배송 조회'])        // 선택
+            ->setReserved('2026-08-31 14:20', 'Asia/Seoul');         // 선택
     }
 }
 ```
 
-## 발송 결과 추적 (Message tracking)
+`content`는 승인된 템플릿 본문과 일치해야 합니다. 일치하지 않으면 발송이 거절됩니다.
+채널 아이디를 메시지마다 다르게 쓰려면 생성자나 `plusFriendId()`로 지정합니다.
 
-발송 API는 비동기입니다. `202` 응답은 **요청이 접수되었다**는 뜻이며, 수신자에게 전달되었다는 보장이 아닙니다.
-실제 수신 여부는 발송 시 받은 `requestId`로 조회해야 합니다.
+```php
+new AlimTalkMessage('@another-channel');
+// 또는
+(new AlimTalkMessage)->plusFriendId('@another-channel');
+```
+
+### 4) Notification 없이 직접 발송
+
+파사드로 클라이언트를 직접 사용할 수 있습니다. 이 경우 응답 객체를 그대로 돌려받습니다.
+
+```php
+use Daworks\Sens\Facades\Sens;
+use Daworks\Sens\Sms\SmsMessage;
+
+$message = (new SmsMessage)->to('01000000000')->content('안녕하세요.');
+
+$response = Sens::sms()->send($message->toArray());
+```
+
+클라이언트는 컨테이너에 싱글톤으로 등록되어 있으므로 주입해서 써도 됩니다.
+
+```php
+public function __construct(private \Daworks\Sens\Sms\Sms $sms) {}
+```
+
+## 메시지 빌더 레퍼런스
+
+### `SmsMessage`
+
+| 메서드 | 설명 |
+| --- | --- |
+| `type(string)` | `SMS` / `LMS` / `MMS`. 기본 `SMS`. 대문자로 변환됩니다. |
+| `contentType(string)` | `COMM`(일반) / `AD`(광고). 기본 `COMM`. |
+| `countryCode(int)` | 국가 번호. 기본 `82`. |
+| `from(string)` | 발신 번호. 하이픈은 자동으로 제거됩니다. 생략하면 설정값을 사용합니다. |
+| `subject(string)` | 제목. LMS·MMS에서만 사용됩니다. |
+| `content(string)` | 본문. |
+| `to(string)` | 수신 번호. 하이픈은 자동으로 제거됩니다. **호출할 때마다 수신자가 추가됩니다.** |
+| `setReserved(string, string)` | 예약 발송 일시(`YYYY-MM-DD HH:mm`)와 타임존(기본 `Asia/Seoul`). |
+| `file(string, string\|UploadedFile)` | MMS 첨부. 발송 직전에 업로드됩니다. |
+| `fileId(string)` | 이미 업로드한 첨부 파일의 아이디. |
+| `toArray()` | 요청 배열로 변환합니다. |
+
+### `AlimTalkMessage`
+
+| 메서드 | 설명 |
+| --- | --- |
+| `__construct(?string $friendId)` | 채널 아이디. 생략하면 `plus_friend_id` 설정값을 사용합니다. |
+| `plusFriendId(string)` | 채널 아이디를 지정합니다. |
+| `templateCode(string)` | 템플릿 코드 (필수). |
+| `to(string)` | 수신 번호 (필수). **`SmsMessage`와 달리 한 번에 한 명이며, 다시 호출하면 덮어씁니다. 하이픈도 제거되지 않으니 숫자만 넣으십시오.** |
+| `content(string)` | 본문 (필수). 승인된 템플릿과 일치해야 합니다. |
+| `countryCode(string)` | 국가 번호. 기본 `'82'`. |
+| `addButton(array)` | 버튼을 추가합니다. 버튼 형식은 알림톡 API 명세를 따릅니다. |
+| `setReserved(string, string)` | 예약 발송 일시와 타임존(기본 `Asia/Seoul`). |
+| `setSchedule(string)` | 스케줄 코드. 지정하지 않으면 요청에 포함되지 않습니다. |
+| `toArray()` | 요청 배열로 변환합니다. |
+
+## 발송 결과 추적
+
+발송 API는 비동기입니다. `202` 응답은 **요청이 접수되었다**는 뜻이며, 수신자에게 전달되었다는
+보장이 아닙니다. 실제 수신 여부는 발송 시 받은 `requestId`로 조회해야 합니다.
 
 ```
 send() → requestId → findByRequestId() → messageId[] → findMessage() → 수신 상태
@@ -360,8 +481,8 @@ foreach ($response->failedMessages() as $message) {
 큐로 발송하면 호출부에서는 반환값을 받을 수 없으므로, **이벤트 리스너로 기록하는 방식을 권장합니다.**
 
 ```php
-use Illuminate\Notifications\Events\NotificationSent;
 use Daworks\Sens\Responses\SendResponse;
+use Illuminate\Notifications\Events\NotificationSent;
 
 class RecordSensRequestId
 {
@@ -405,11 +526,11 @@ foreach ($list->failed() as $message) {
 // 개별 메시지의 상세 결과를 조회합니다.
 $result = Sens::sms()->findMessage($list->messageIds()[0]);
 
-$result->isSuccessful();    // 수신 성공 여부
-$result->isPending();       // 아직 처리 중인지 (실패로 단정하면 안 됩니다)
-$result->getStatusCode();   // '3018'
-$result->getStatusMessage();// '발신번호 변작 방지 서비스에 가입된 번호'
-$result->toArray();         // SENS 원본 응답
+$result->isSuccessful();     // 수신 성공 여부
+$result->isPending();        // 아직 처리 중인지 (실패로 단정하면 안 됩니다)
+$result->getStatusCode();    // '3018'
+$result->getStatusMessage(); // '발신번호 변작 방지 서비스에 가입된 번호'
+$result->toArray();          // SENS 원본 응답
 ```
 
 알림톡도 동일한 방법으로 조회합니다. 알림톡은 SMS 대체 발송(failover)이 있으므로
@@ -418,9 +539,9 @@ $result->toArray();         // SENS 원본 응답
 ```php
 $result = Sens::alimTalk()->findMessage($messageId);
 
-$result->isSuccessful();     // 알림톡으로 전달되었는지
-$result->failoverSucceeded();// SMS 대체 발송이 성공했는지
-$result->isDelivered();      // 둘 중 하나로 전달되었는지
+$result->isSuccessful();      // 알림톡으로 전달되었는지
+$result->failoverSucceeded(); // SMS 대체 발송이 성공했는지
+$result->isDelivered();       // 둘 중 하나로 전달되었는지
 ```
 
 > **폴링할 때 주의**
@@ -451,11 +572,15 @@ $list = Sens::sms()->findMessages([
 ]);
 
 if ($list->hasMore) {
-    $next = Sens::sms()->findMessages([/* ... */, 'nextToken' => $list->nextToken]);
+    $next = Sens::sms()->findMessages([/* ... */ 'nextToken' => $list->nextToken]);
 }
 ```
 
-### 4) 예약 발송 관리
+SMS 목록 조회는 `requestId`, `requestStartTime` + `requestEndTime`,
+`completeStartTime` + `completeEndTime` 중 하나를 반드시 지정해야 합니다.
+알림톡을 `requestId` 없이 조회하면 설정된 채널 아이디(`plus_friend_id`)가 자동으로 쓰입니다.
+
+## 예약 발송 관리
 
 예약 아이디는 발송 시 받은 `requestId`와 같습니다.
 
@@ -470,7 +595,9 @@ if ($status->isPending()) {
 }
 ```
 
-### 5) 오류 처리
+`isCanceled()`, `isCompleted()`, `isFailed()`로도 상태를 확인할 수 있습니다.
+
+## 오류 처리
 
 인증 실패나 잘못된 요청처럼 SENS가 오류를 응답하면 `SensException`이 발생하며,
 예외 객체에서 상태 코드와 응답 본문을 확인할 수 있습니다.
@@ -496,7 +623,42 @@ MMS를 `file()`로 발송할 때는 첨부 파일 업로드가 먼저 이루어�
 이 경우 발송 요청이 나가지 않았으므로 `requestId`가 없습니다.
 두 단계를 구분해서 처리하려면 `uploadAttachment()`를 직접 호출하고 `fileId()`로 넘기십시오.
 
-### 변경 사항 안내
+## 테스트
+
+```bash
+composer install
+vendor/bin/phpunit
+```
+
+테스트는 실제 SENS API를 호출하지 않습니다. 애플리케이션 코드에서 응답을 가로채고 싶다면
+`setHttpClient()`로 Guzzle 클라이언트를 교체할 수 있습니다.
+
+```php
+Sens::sms()->setHttpClient($mockedGuzzleClient);
+```
+
+## 기능
+
+- SMS · LMS · MMS 발송
+- 카카오 알림톡 발송
+- 발송 결과 추적 (`requestId` / `messageId` 기반 조회)
+- 예약 발송 상태 조회 및 취소
+
+## 커뮤니티
+
+- [라라벨코리아](https://laravel.kr/)
+- [라라벨코리아 오픈채팅](https://open.kakao.com/o/g3dWlf0)
+
+## 라이선스
+
+이 패키지는 [Apache License 2.0](LICENSE.md)으로 배포됩니다.
+
+원본인 [seungmun/laravel-sens](https://github.com/seungmun/laravel-sens)는 MIT 라이선스로 공개되었으며,
+MIT 라이선스가 요구하는 저작권 고지는 [NOTICE](NOTICE) 파일에 그대로 보존되어 있습니다.
+원본에서 유래한 부분에는 해당 고지가 계속 적용됩니다.
+
+<details>
+<summary><strong>변경 사항 안내</strong> (발송 결과 추적 기능 도입 시점)</summary>
 
 발송 결과 추적 기능이 추가되면서 다음이 바뀌었습니다. 기존 발송 코드는 그대로 동작합니다.
 
@@ -514,17 +676,4 @@ MMS를 `file()`로 발송할 때는 첨부 파일 업로드가 먼저 이루어�
 - 발신 번호를 `config/laravel-sens.php`의 `sms_from`으로도 설정할 수 있습니다.
   기존 `config/services.php` 설정이 있으면 그 값이 우선합니다.
 
-## Features
-
-- SMS(LMS) and MMS
-- Kakao Alimtalk
-- 발송 결과 추적 (requestId / messageId 기반 조회)
-- 예약 발송 상태 조회 및 취소
-
-## License
-
-이 패키지는 [Apache License 2.0](LICENSE.md)으로 배포됩니다.
-
-원본인 [seungmun/laravel-sens](https://github.com/seungmun/laravel-sens)는 MIT 라이선스로 공개되었으며,
-MIT 라이선스가 요구하는 저작권 고지는 [NOTICE](NOTICE) 파일에 그대로 보존되어 있습니다.
-원본에서 유래한 부분에는 해당 고지가 계속 적용됩니다.
+</details>
