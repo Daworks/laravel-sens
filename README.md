@@ -58,7 +58,20 @@ SENS_SECRET_KEY=your-sens-secret-key
 SENS_SERVICE_ID=your-sens-service-id
 SENS_ALIMTALK_SERVICE_ID=your-alimtalk-service-id
 SENS_PlUS_FRIEND_ID=your-plus-friend-id
+SENS_SMS_FROM=1234567890
+SENS_RATE_LIMIT=30
 ```
+
+### `SENS_RATE_LIMIT`
+
+초당 발송 건수입니다. 한도를 넘긴 요청을 SENS 는 기다리게 하지 않고 그 자리에서
+`429` 로 거절하므로, 대량 발송에서 이 값을 넘겨 부르면 넘친 만큼이 그대로 실패로
+남습니다.
+
+**이 패키지는 값을 두기만 하고 스스로 조이지는 않습니다.** 발송을 어떤 간격으로
+부를지는 큐·워커 구성에 따라 달라서 호출하는 쪽이 정해야 합니다. `config('laravel-sens.rate_limit')`
+를 읽어 실제로 제한하는 것은 쓰는 쪽의 몫입니다. `0` 이나 음수는 '제한하지 않음'
+으로 씁니다.
 
 If you want to put the `sms_from` value in your .env,
 
