@@ -42,6 +42,9 @@ abstract class Sens implements SensContract
      */
     public function __construct(array $config)
     {
+        // httpClient() 가 타임아웃을 config 에서 읽으므로 config 를 먼저 채운다.
+        $this->config = $config;
+
         $this->httpClient();
 
         /*
@@ -58,8 +61,6 @@ abstract class Sens implements SensContract
             ->setSecretKey((string) ($config['secret_key'] ?? ''));
 
         $this->baseUrl = rtrim((string) ($config['base_url'] ?? '') ?: self::BASE_URL, '/');
-
-        $this->config = $config;
     }
 
     /**
@@ -72,11 +73,19 @@ abstract class Sens implements SensContract
     /**
      * Create a new HTTP Request Client.
      *
+     * 타임아웃을 두지 않으면 SENS 가 응답을 물고 있는 동안 호출한 쪽이 한없이
+     * 붙들린다 — 큐 워커라면 작업 제한 시간을 그대로 삼켜 버린다. 기본값은
+     * 발송 한 건이 큐 작업의 시간 예산 안에 들도록 짧게 잡고, 설정으로 바꿀 수
+     * 있게 한다.
+     *
      * @return \GuzzleHttp\Client
      */
     protected function httpClient()
     {
-        return $this->http ?: $this->http = new Client();
+        return $this->http ?: $this->http = new Client([
+            'connect_timeout' => $this->config['http_connect_timeout'] ?? 5,
+            'timeout' => $this->config['http_timeout'] ?? 10,
+        ]);
     }
 
     /**

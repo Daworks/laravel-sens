@@ -36,6 +36,29 @@ class SmsTest extends TestCase
         ]));
     }
 
+    /**
+     * 타임아웃이 없으면 SENS 가 응답을 물고 있는 동안 호출한 쪽(큐 워커)이
+     * 한없이 붙들린다. 기본 클라이언트에 상한이 실제로 실렸는지 확인한다.
+     */
+    public function testDefaultHttpClientCarriesTimeouts(): void
+    {
+        $client = function (array $config) {
+            $sms = new Sms($config);
+
+            $property = new \ReflectionProperty(\Daworks\Sens\Sens::class, 'http');
+
+            return $property->getValue($sms);
+        };
+
+        $default = $client([]);
+        $this->assertSame(10, $default->getConfig('timeout'));
+        $this->assertSame(5, $default->getConfig('connect_timeout'));
+
+        $tuned = $client(['http_timeout' => 20, 'http_connect_timeout' => 3]);
+        $this->assertSame(20, $tuned->getConfig('timeout'));
+        $this->assertSame(3, $tuned->getConfig('connect_timeout'));
+    }
+
     public function testSendReturnsRequestId(): void
     {
         $sms = $this->sms([

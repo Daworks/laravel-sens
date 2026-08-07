@@ -85,6 +85,39 @@ class MessageTest extends TestCase
         $this->assertArrayNotHasKey('reserveTimeZone', $payload);
     }
 
+    public function testSmsMessageCarriesPerRecipientOverrides(): void
+    {
+        $this->fakeConfig();
+
+        $payload = (new SmsMessage)
+            ->content('기본 본문')
+            ->to('010-1111-2222')
+            ->to('010-3333-4444', '홍길동님께만 가는 본문')
+            ->to('010-5555-6666', '김철수님께만 가는 본문', '개별 제목')
+            ->toArray();
+
+        $this->assertSame([
+            ['to' => '01011112222'],
+            ['to' => '01033334444', 'content' => '홍길동님께만 가는 본문'],
+            ['to' => '01055556666', 'subject' => '개별 제목', 'content' => '김철수님께만 가는 본문'],
+        ], $payload['messages']);
+    }
+
+    public function testSmsMessageRejectsMoreRecipientsThanSensAccepts(): void
+    {
+        $this->fakeConfig();
+
+        $message = new SmsMessage;
+
+        for ($i = 0; $i < SmsMessage::MAX_MESSAGES; $i++) {
+            $message->to(sprintf('0101%07d', $i));
+        }
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $message->to('010-9999-9999');
+    }
+
     public function testSmsMessageAcceptsAPreUploadedFileId(): void
     {
         $this->fakeConfig();

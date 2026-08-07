@@ -3,6 +3,27 @@
 이 파일은 [Keep a Changelog](https://keepachangelog.com/) 형식을 따르며,
 버전은 [유의적 버전](https://semver.org/lang/ko/)을 따릅니다.
 
+## [1.4.0] - 2026-08-07
+
+### 추가
+
+- `SmsMessage::to()`가 수신자별 본문·제목 오버라이드를 받습니다. SENS는
+  `messages[].content` / `messages[].subject`가 있으면 기본값 대신 그 값을 쓰므로,
+  치환처럼 수신자마다 본문이 다른 발송도 한 요청(최대 100명)에 실을 수 있습니다.
+  NCloud가 권장하는 방식입니다 — 같은 메시지를 건별 요청 N건으로 보내면 처리가
+  지연될 수 있고, 한 요청에 최대 100명까지 싣는 것이 좋다고 안내했습니다(2026-08).
+- `SmsMessage::MAX_MESSAGES`(100)를 넘겨 수신자를 더 실으려 하면
+  `InvalidArgumentException`으로 즉시 알립니다. SENS에 보내고 나서야 거절당하는
+  것보다 낫습니다.
+- HTTP 타임아웃 설정(`http_connect_timeout` 기본 5초, `http_timeout` 기본 10초)을
+  추가했습니다. 이전에는 Guzzle 기본값(무제한)이라 SENS가 응답을 물고 있으면
+  호출한 쪽(큐 워커 등)이 한없이 붙들렸습니다.
+
+### 변경
+
+- `rate_limit` 기본값을 0(제한 없음)으로 바꿨습니다. SENS에는 API 호출 속도 제한이
+  없고, 429는 일일 발송 한도 초과를 뜻한다고 NCloud가 공식 확인했습니다(2026-08).
+
 ## [1.3.2] - 2026-08-06
 
 ### 수정

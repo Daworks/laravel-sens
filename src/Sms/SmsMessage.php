@@ -7,6 +7,14 @@ use Illuminate\Contracts\Filesystem\FileNotFoundException;
 
 class SmsMessage implements SensMessage
 {
+    /**
+     * 한 요청에 실을 수 있는 최대 수신자 수.
+     *
+     * SENS 발송 API 의 messages 상한이다. NCloud 는 같은 메시지를 여러 명에게
+     * 보낼 때 건별 요청 대신 이 상한까지 한 요청에 싣기를 권장한다.
+     */
+    public const MAX_MESSAGES = 100;
+
     /** @var string */
     public $type = 'SMS';
 
@@ -132,14 +140,32 @@ class SmsMessage implements SensMessage
     /**
      * Set Recipient's number.
      *
+     * $content / $subject 를 주면 그 수신자에게만 기본 content / subject 대신
+     * 그 값이 나간다 — 치환처럼 수신자마다 본문이 다른 발송도 한 요청에 실을
+     * 수 있다. $subject 는 LMS 에서만 의미가 있다.
+     *
      * @param  string  $to
+     * @param  string|null  $content  이 수신자에게만 쓸 본문
+     * @param  string|null  $subject  이 수신자에게만 쓸 제목 (LMS)
      * @return $this
+     *
+     * @throws \InvalidArgumentException 수신자가 MAX_MESSAGES 를 넘는 경우
      */
-    public function to(string $to)
+    public function to(string $to, ?string $content = null, ?string $subject = null)
     {
-        array_push($this->messages, [
+        if (count($this->messages) >= self::MAX_MESSAGES) {
+            throw new \InvalidArgumentException(
+                'SENS 는 한 요청에 수신자를 ' . self::MAX_MESSAGES . '명까지만 받습니다. 나눠서 요청하십시오.'
+            );
+        }
+
+        array_push($this->messages, array_filter([
             'to' => str_replace('-', '', $to),
-        ]);
+            'subject' => $subject,
+            'content' => $content,
+        ], function ($value) {
+            return $value !== null;
+        }));
 
         return $this;
     }
